@@ -14,29 +14,6 @@ int A[1000];
 int M, N;
 
 
-// this is an upgraded (for this problem) version of the code from geeksforgeeks
-int knapSack(int capacity, int wt[], int val[], int n, int v[], int i)
-{
-   if (n == 0 || capacity == 0)
-       return 0;
- 
-   if (wt[n-1] > capacity)
-       return knapSack(capacity, wt, val, n-1);
-   
-   
-   else
-   {
-   v[i] = max( val[n-1] + knapSack(capacity-wt[n-1], wt, val, n-1, v, i+1),
-                    knapSack(capacity, wt, val, n-1, v, i+1));
-
-					
-   return v[i-1];
-   }
-}
-
-
-
-
 
 /////////////////  UPGRADED VERSION OF RECURSIVE KNAPSACK	//////////////////
 int D_rec(int i, int j,  int st, vector<int> v)
@@ -47,7 +24,7 @@ int D_rec(int i, int j,  int st, vector<int> v)
 		return D[i][j];
 	if(j-A[i+st] > 0)
 	{
-		int res = max(D_rec(i-1, j, st, v), D_rec(i-1, j-A[i+st])+A[i+st], st, v);	// i+st to use values from  middle (index st) of array A
+		int res = max(D_rec(i-1, j, st, v), D_rec(i-1, j-A[i+st]+A[i+st], st, v));	// i+st to use values from  middle (index st) of array A
 		D[i][j] = res;
 		v.push_back(res);	//////////// saves values < desired number in vector  v1.
 		return res;
@@ -61,11 +38,11 @@ int D_rec(int i, int j,  int st, vector<int> v)
 
 // upgraded,  original from geeksforgeeks
 // this one returns the closest value from below to the desired sum number
-int findpair(vector<int> arr, int len, int sum)
+int findpair(vector<int> arr, int sum)
 {
-    std::sort(arr, arr+len);
+    std::sort(arr.begin(), arr.end());
     int i = 0;
-    int j = len -1;
+    int j = arr.size()-1;
 	int closest = 0;
     while( i < j){
         while((arr[i] + arr[j]) <= sum && i < j)
@@ -73,7 +50,7 @@ int findpair(vector<int> arr, int len, int sum)
 			int temp = arr[i] + arr[j];
 			if(closest < temp)
 				closest = temp;
-            if((temp == sum)
+            if(temp == sum)
                 cout << "(" << arr[i] << "," << arr[j] << ")" << endl;
             i++;
         }
@@ -120,11 +97,8 @@ int knapsack(int capacity, int desired, int lengthA)
 	std::sort(v1.begin(), v1.end());
 	//std::sort(v2.begin(), v2.end());
 	
-	length1 = v1.size();
-	//length2 = v2.size();
 	
-	
-	int ans = findpair(v1, v1.size() , desired);
+	int ans = findpair(v1, desired);
 	
 	return ans;
 	
