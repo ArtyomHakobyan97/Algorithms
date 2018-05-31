@@ -1,0 +1,169 @@
+#include <iostream>
+#include <vector>
+#include <set>
+
+using namespace std;
+
+class Edge {
+public:
+	int v1;
+	int v2;
+	int weight;
+};
+
+class Edge2 {
+public:
+	Edge2() = default;
+	Edge2(int v2, int weight)
+		: v2(v2)
+		, weight(weight)
+	{ }
+	int v2;
+	int weight;
+};
+
+class D_value {
+public:
+	D_value() = default;
+	D_value(int v2, int distance)
+		: v2(v2) // i
+		, distance(distance) // d[i]
+	{ }
+
+	bool operator<(const D_value& other) const {
+		if (distance != other.distance)
+			return distance	< other.distance;
+		return v2 < other.v2;
+	}
+
+	int v2; // i
+	int distance; // d[i]
+};
+
+// Adjacency list.
+vector<vector<Edge2>> G;
+
+// Adjacency matrix.
+vector<vector<int>> G_matrix;
+
+// List of edges.
+vector<Edge> G_edges;
+
+void read_graph() {
+	int n, m; // n = |V|, m = |E|
+	cin >> n >> m;
+	G_matrix.resize(n);
+	for (int i = 0; i < n; ++i) {
+		G_matrix[i].resize(n);
+	}
+	Edge current;
+	G.resize(n);
+	for (int i = 0; i < m; ++i) {
+		cin >> current.v1 >> current.v2 >> current.weight;
+		// G_edges.push_back(current);
+		// G_matrix[current.v1][current.v2] = current.weight;
+		// G_matrix[current.v2][current.v1] = current.weight; // If graph was bidirectional/undirected.
+		G[current.v1].push_back(Edge2(current.v2, current.weight));
+		G[current.v2].push_back(Edge2(current.v1, current.weight)); // If graph was bidirectional/undirected.
+	}
+}
+vector<bool> marked;
+vector<int> d;
+set<D_value> S;
+
+void print_d() {
+	for (int i = 0; i < G.size(); ++i) {
+		if (d[i] == INT_MAX / 2) {
+			cout << "- ";
+		}
+		else {
+			cout << d[i] << " ";
+		}
+	}
+	cout << endl;
+}
+
+void dijkstra(int v) {
+	marked.resize(G.size()); // size = |V|.
+	for (int i = 0; i < G.size(); ++i)
+		marked[i] = false;
+	d.resize(G.size()); // size = |V|.
+	for (int i = 0; i < G.size(); ++i)
+		d[i] = INT_MAX / 2;
+	d[v] = 0;
+	S.insert(D_value(v, 0));
+
+	for (int i = 0; i < G.size(); ++i) { // O(V)
+		//int min = INT_MAX;
+		int argmin = S.begin()->v2; // log(V), |S|<V.
+		// d = [0, 3, 5, 7, 6, inf, inf, inf]
+		// marked = [true, true, false, false, ..]
+		// armgin = 2
+		// S = {(4, 6), (3, 7), , ..}
+		/*for (int j = 0; j < G.size(); ++j) { // O(V)
+			if (!marked[j] && d[j] < min) {
+				min = d[j];
+				argmin = j;
+			}
+		}*/
+		// iterate over the neighbours of "argmin".
+		for (int j = 0; j < G[argmin].size(); ++j) { // O(E/V) in average.
+			if (d[G[argmin][j].v2] > d[argmin] + G[argmin][j].weight) {
+				// If the old value is inside set S.
+				if (d[G[argmin][j].v2] != INT_MAX / 2) {
+					auto iter = S.find(D_value( // O(log v)
+						G[argmin][j].v2, d[G[argmin][j].v2]));
+					if (iter == S.end()) {
+						throw "Problem in the algorithm.";
+					}
+					S.erase(iter); // removed the old value.
+				}
+				S.insert(D_value( // log(V)
+					G[argmin][j].v2, d[argmin] + G[argmin][j].weight));
+				d[G[argmin][j].v2] = d[argmin] + G[argmin][j].weight;
+			}
+		}
+		marked[argmin] = true;
+		auto iter = S.find(D_value(argmin, d[argmin]));
+		if (iter == S.end()) {
+			throw "Problem in the algorithm.";
+		}
+		S.erase(iter); // removed the old value.
+		print_d();
+	}
+	
+}
+
+int main() {
+	read_graph();
+	dijkstra(0);
+	return 0;
+}
+/*
+Facebook: V = 2*10^9 E = 200 * V
+Map: V = 100,000,000 E = 10 * V
+Theoretical graph: v = 100.000.000 E = V * V/2
+//// Dijkstra O(v*v+E), O(e*log(v))
+|V| |E|
+repeated |V| times
+v1 v2 w
+
+8 16 
+0 1 1
+0 2 5
+0 3 4
+1 2 3
+1 3 2
+1 4 5
+1 5 10
+2 3 3 
+3 4 2
+3 6 6
+3 7 9
+4 5 1
+4 6 4
+5 6 2
+5 7 7
+6 7 2
+
+*/

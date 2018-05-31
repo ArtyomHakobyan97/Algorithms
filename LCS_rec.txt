@@ -1,0 +1,98 @@
+#include <vector>
+#include <string>
+#include <iostream>
+#include <algorithm>
+#include <time.h>
+
+using namespace std;
+
+int D[10001][10001];
+int D_rec[10001][10001];
+string s1, s2;
+
+void fill_LCS() { // O(n*n)
+	for (int i = 1; i <= s1.size(); ++i) {
+		for (int j = 1; j <= s2.size(); ++j) {
+			if (s1[i - 1] == s2[j - 1]) {
+				D[i][j] = D[i - 1][j - 1] + 1;
+			}
+			else {
+				D[i][j] = max(D[i - 1][j], D[i][j - 1]);
+			}
+		}
+	}
+}
+int getLCS(int i, int j) {
+	if (i == 0 || j == 0)
+		return 0;
+	if (D_rec[i][j] != -1)
+		return D_rec[i][j];
+	int result;
+	if (s1[i] == s2[j])
+		result = getLCS(i - 1, j - 1) + 1;
+	else
+		result = max(getLCS(i - 1, j), getLCS(i, j - 1));
+	D_rec[i][j] = result;
+	return result;
+}
+
+string print(int i, int j) { // i+j // O(n)
+	if (i == 0 || j == 0)
+		return "";
+	if (s1[i - 1] == s2[j - 1]) {
+		// used the letter.
+		return print(i - 1, j - 1) + s1[i - 1];
+	}
+	else {
+		// Didn't use the letter.
+		if (D[i][j] == D[i - 1][j])
+			return print(i - 1, j);
+		else
+			return print(i, j - 1);
+	}
+}
+
+int main() {
+	// cin >> s1 >> s2;
+	for (int i = 0; i < 1000; i++)
+	{
+		s1 += rand() % 26 + 'A';
+		s2 += rand() % 26 + 'A';
+	}
+	for (int i = 1; i <= s1.size(); ++i) {
+		for (int j = 1; j <= s2.size(); ++j) {
+			D_rec[i][j] = -1;
+		}
+	}
+	int start_time = clock();
+	int random_number = 0;
+	for (int i = 0; i < 100; ++i){
+		fill_LCS(); // O(n*n)
+		random_number += i*i;
+	}
+	int end_time = clock();
+	cout << "Length of LCS is "
+		<< D[s1.size()][s2.size()] << endl;
+	cout << "Time spent on iterative solution: " 
+		<< end_time - start_time << endl;
+	cout << "LCS is "
+		<< print(s1.size(), s2.size())  // O(N)
+		<< endl;
+	start_time = clock();
+	int rec_result;
+	for (int i = 0; i < 100; ++i) {
+		rec_result = getLCS(s1.size(), s2.size());
+		random_number += i*i;
+	}
+	cout << "Recursively computed: " 
+		<< rec_result << endl;
+	end_time = clock();
+	cout << "Time spent on recursive solution: "
+		<< end_time - start_time << endl;
+	cout << "This is just a random number: "<< random_number << endl;
+	return 0;
+}
+/*
+wababadabadupdup
+abababobabadup
+*/

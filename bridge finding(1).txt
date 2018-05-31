@@ -1,0 +1,103 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+class Edge {
+public:
+	int v1;
+	int v2;
+	int weight;
+};
+
+class Edge2 {
+public:
+	Edge2() = default;
+	Edge2(int v2, int weight)
+		: v2(v2)
+		, weight(weight)
+	{ }
+	int v2;
+	int weight;
+};
+
+// Adjacency list.
+vector<vector<Edge2>> G;
+
+void read_graph() {
+	int n, m; // n = |V|, m = |E|
+	cin >> n >> m;
+	Edge current;
+	G.resize(n);
+	for (int i = 0; i < m; ++i) {
+		cin >> current.v1 >> current.v2;
+		G[current.v1].push_back(Edge2(current.v2, -1));
+		G[current.v2].push_back(Edge2(current.v1, -1)); // If graph was bidirectional/undirected.
+	}
+}
+vector<bool> marked;
+vector<int> DFS_value;
+vector<int> parent;
+vector<int> min_value;
+
+int next_DFS_number; 
+
+void find_bridges(int v) { // speed = O(|E|)
+	marked[v] = true;
+	DFS_value[v] = next_DFS_number;
+	min_value[v] = next_DFS_number;
+	++next_DFS_number;
+	for (int i = 0; i < G[v].size(); ++i) { // < O(V)
+		if (!marked[G[v][i].v2]) {
+			parent[G[v][i].v2] = v;
+			find_bridges(G[v][i].v2);
+			if (min_value[G[v][i].v2] < min_value[v]) {
+				min_value[v] = min_value[G[v][i].v2];
+			}
+		}
+		else {
+			// Edge outside the tree.
+			if (G[v][i].v2 != parent[v] && 
+				DFS_value[G[v][i].v2] < min_value[v]) {
+				min_value[v] = DFS_value[G[v][i].v2];
+			}
+		}
+	}
+}
+
+int main() {
+	read_graph();
+	next_DFS_number = 1;
+	marked.resize(G.size()); // size = |V|.
+	DFS_value.resize(G.size()); // size = |V|.
+	min_value.resize(G.size()); // size = |V|.
+	parent.resize(G.size()); // size = |V|.
+	for (int i = 0; i < G.size(); ++i)
+		marked[i] = false;
+	find_bridges(0); // dfs = depth first search
+	for (int i = 1; i < G.size(); ++i) {
+		if (DFS_value[i] == min_value[i]) {
+			std::cout << i << " " <<  parent[i] << std::endl;
+		}
+	}
+	return 0;
+}
+/*
+|V| |E|
+repeated |V| times
+v1 v2 w
+
+10 11
+0 1
+0 2
+0 3
+1 5
+3 4
+4 5
+4 6
+6 7
+6 8
+7 8
+7 9
+
+*/
